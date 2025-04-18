@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/textModeContainerChat"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#0000FF">
-
-<!-- <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/chatScrollView"
@@ -15,12 +7,29 @@
     android:layout_height="match_parent"
     android:fillViewport="true"
     android:background="#00FF00"> 
- -->    
+
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/textModeContainerChat"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#0000FF">
+
+    <Button
+        android:id="@+id/marker1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Mark1"
+        android:textSize="24sp"
+        android:background="#FF0000"
+        android:textColor="#000000"/>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/aprsRecyclerView"
+        android:id="@+id/aprsRecyclerView2"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="100dp"
         android:orientation="vertical"
         android:layout_weight="1"
         android:background="#FF0000">
@@ -28,6 +37,7 @@
         <!-- APRS messages go here -->
 
     </androidx.recyclerview.widget.RecyclerView>
+
     <View
         android:layout_width="fill_parent"
         android:layout_height="1dp"
@@ -137,5 +147,14 @@
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
+    <Button
+    android:id="@+id/marker2"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="Mark2"
+    android:textSize="24sp"
+    android:background="#FF0000"
+    android:textColor="#000000"/>
+
 </androidx.appcompat.widget.LinearLayoutCompat>
-<!-- </ScrollView> -->
+</ScrollView>

@@ -27,6 +27,8 @@ import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import timber.log.Timber;
 
@@ -53,10 +55,12 @@ public class ChatFragment extends Fragment {
 
         Timber.d("Chat fragment created");
 
+        MainActivity mainAct = (MainActivity) requireActivity();
+        String callsign = mainAct.getCallsign();
+
         sendButton = view.findViewById(R.id.sendButton_XX);
         sendButtonOverlay = view.findViewById(R.id.sendButtonOverlay_XX);
 
-        String callsign = ((MainActivity) requireActivity()).getCallsign();
 
         // Handle enabling/disabling sendButton, etc.
         if (callsign.isBlank()) {
@@ -66,5 +70,10 @@ public class ChatFragment extends Fragment {
             sendButton.setEnabled(true);
             sendButtonOverlay.setVisibility(View.GONE);
         }
+
+        RecyclerView aprsRecyclerViewFragment = view.findViewById(R.id.aprsRecyclerView2);
+        aprsRecyclerViewFragment.setLayoutManager(new LinearLayoutManager(getContext()));
+        aprsRecyclerViewFragment.setAdapter(mainAct.getAprsAdapter());
+
     }
 }

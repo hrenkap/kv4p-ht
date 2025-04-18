@@ -164,6 +164,11 @@ public class MainActivity extends AppCompatActivity {
     // The main service that handles USB with the ESP32, incoming and outgoing audio, data, etc.
     private RadioAudioService radioAudioService = null;
 
+
+    public APRSAdapter getAprsAdapter() {
+        return aprsAdapter;
+    }
+
     public String getCallsign() {
         return callsign;
     }
@@ -268,11 +273,6 @@ public class MainActivity extends AppCompatActivity {
         aprsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         aprsAdapter = new APRSAdapter();
         aprsRecyclerView.setAdapter(aprsAdapter);
-
-        // TODO : remove
-        //RecyclerView aprsRecyclerViewFragment = findViewById(R.id.aprsRecyclerView2);
-        //aprsRecyclerViewFragment.setLayoutManager(new LinearLayoutManager(this));
-        //aprsRecyclerViewFragment.setAdapter(aprsAdapter);
 
         // Observe the APRS messages LiveData in MainViewModel (so the RecyclerView can populate with the APRS messages)
         viewModel.getAPRSMessages().observe(this, new Observer<List<APRSMessage>>() {
