@@ -173,6 +173,10 @@ public class MainActivity extends AppCompatActivity {
         return callsign;
     }
 
+    public MemoriesAdapter getMemoriesAdapter() {
+        return memoriesAdapter;
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {

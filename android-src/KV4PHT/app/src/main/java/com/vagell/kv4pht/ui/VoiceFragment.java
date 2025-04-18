@@ -27,6 +27,9 @@ import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 
 import timber.log.Timber;
 
@@ -49,5 +52,12 @@ public class VoiceFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         Timber.d("Voice fragment created");
+
+        MainActivity mainAct = (MainActivity) requireActivity();
+
+        RecyclerView memoriesView = view.findViewById(R.id.memoriesList2);
+        memoriesView.setLayoutManager(new LinearLayoutManager(getContext()));
+        memoriesView.setAdapter(mainAct.getMemoriesAdapter());
+
     }
 }

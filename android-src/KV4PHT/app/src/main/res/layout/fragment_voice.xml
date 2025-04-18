@@ -6,19 +6,59 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="#FF0000">
+    android:padding="16dp">
 
-<!--     <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/memoriesList"
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/voiceModeLineHolder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <View
+            android:layout_width="fill_parent"
+            android:layout_height="1dp"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
+            android:layout_weight="1"
+            android:background="@color/primary"
+            android:gravity="center_vertical" />
+
+        <TextView
+            android:id="@+id/groupSelector"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:fontFamily="@font/jost"
+            android:text="ALL MEMORIES ▼"
+            android:textAllCaps="true"
+            android:textColor="@color/primary"
+            android:textSize="16dp"
+            android:onClick="groupSelectorClicked" />
+
+        <View
+            android:layout_width="fill_parent"
+            android:layout_height="1dp"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
+            android:layout_weight="1"
+            android:background="@color/primary"
+            android:gravity="center_vertical" />
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/memoriesList2"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:paddingLeft="24dp"
                     android:paddingRight="24dp"
                     android:layout_weight="1">
 
-                    <!- - Memory list goes here - ->
+        <!-- Memory list goes here -->
 
     </androidx.recyclerview.widget.RecyclerView>
 
@@ -74,5 +114,4 @@
         </androidx.appcompat.widget.LinearLayoutCompat>
 
     </androidx.appcompat.widget.LinearLayoutCompat>
- -->
 </androidx.appcompat.widget.LinearLayoutCompat>
