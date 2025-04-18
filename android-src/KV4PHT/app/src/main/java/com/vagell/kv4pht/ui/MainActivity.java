@@ -41,7 +41,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Vibrator;
-import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.KeyEvent;
 import android.view.MenuItem;
@@ -65,10 +64,13 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import timber.log.Timber;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
@@ -87,6 +89,10 @@ import com.vagell.kv4pht.data.AppSetting;
 import com.vagell.kv4pht.data.ChannelMemory;
 import com.vagell.kv4pht.databinding.ActivityMainBinding;
 import com.vagell.kv4pht.radio.RadioAudioService;
+
+import com.vagell.kv4pht.ui.ChatFragment;
+import com.vagell.kv4pht.ui.LogFragment;
+import com.vagell.kv4pht.ui.VoiceFragment;
 
 import java.util.List;
 import java.util.Optional;
@@ -158,10 +164,18 @@ public class MainActivity extends AppCompatActivity {
     // The main service that handles USB with the ESP32, incoming and outgoing audio, data, etc.
     private RadioAudioService radioAudioService = null;
 
+    public String getCallsign() {
+        return callsign;
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (/*BuildConfig.DEBUG && */Timber.treeCount() == 0) {
+            Timber.plant(new Timber.DebugTree());
+        }
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -255,6 +269,11 @@ public class MainActivity extends AppCompatActivity {
         aprsAdapter = new APRSAdapter();
         aprsRecyclerView.setAdapter(aprsAdapter);
 
+        // TODO : remove
+        //RecyclerView aprsRecyclerViewFragment = findViewById(R.id.aprsRecyclerView2);
+        //aprsRecyclerViewFragment.setLayoutManager(new LinearLayoutManager(this));
+        //aprsRecyclerViewFragment.setAdapter(aprsAdapter);
+
         // Observe the APRS messages LiveData in MainViewModel (so the RecyclerView can populate with the APRS messages)
         viewModel.getAPRSMessages().observe(this, new Observer<List<APRSMessage>>() {
             @Override
@@ -279,6 +298,8 @@ public class MainActivity extends AppCompatActivity {
                     showScreen(ScreenType.SCREEN_VOICE);
                 } else if (itemId == R.id.text_chat_mode) {
                     showScreen(ScreenType.SCREEN_CHAT);
+                } else if (itemId == R.id.log_mode) {
+                    showScreen(ScreenType.SCREEN_LOG);
                 }
                 return true;
             }
@@ -540,7 +561,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             radioAudioService = null;
-            Log.d("DEBUG", "RadioAudioService disconnected from MainActivity.");
+            Timber.d("DEBUG", "RadioAudioService disconnected from MainActivity.");
             // TODO if this is unexpected we should probably try to restart the service.
         }
     };
@@ -679,7 +700,7 @@ public class MainActivity extends AppCompatActivity {
             aprsMessage.windForce = (null == weatherField.getWindSpeed()) ? 0 : weatherField.getWindSpeed();
             aprsMessage.windDir = (null == weatherField.getWindDirection()) ? "" : Utilities.degressToCardinal(weatherField.getWindDirection());
 
-            // Log.d("DEBUG", "Weather packet received");
+            // Timber.d("DEBUG", "Weather packet received");
         } else if (infoField.getDataTypeIdentifier() == ':') { // APRS "message" type. What we expect for our text chat.
             aprsMessage.type = APRSMessage.MESSAGE_TYPE;
             MessagePacket messagePacket = new MessagePacket(infoField.getRawBytes(), aprsPacket.getDestinationCall());
@@ -693,20 +714,20 @@ public class MainActivity extends AppCompatActivity {
                         aprsMessage.msgNum = Integer.parseInt(msgNumStr.trim());
                     }
                 } catch (Exception e) {
-                    Log.d("DEBUG", "Warning: Bad message number in APRS ack, ignoring: '" + messagePacket.getMessageNumber() + "'");
+                    Timber.d("DEBUG", "Warning: Bad message number in APRS ack, ignoring: '" + messagePacket.getMessageNumber() + "'");
                     e.printStackTrace();
                     return;
                 }
-                // Log.d("DEBUG", "Message ack received");
+                // Timber.d("DEBUG", "Message ack received");
             } else {
                 aprsMessage.msgBody = messagePacket.getMessageBody();
-                // Log.d("DEBUG", "Message packet received");
+                // Timber.d("DEBUG", "Message packet received");
             }
         } else if (infoField.getDataTypeIdentifier() == ';') { // APRS "object"
             aprsMessage.type = APRSMessage.OBJECT_TYPE;
             if (null != objectField) {
                 aprsMessage.objName = objectField.getObjectName();
-                // Log.d("DEBUG", "Object packet received");
+                // Timber.d("DEBUG", "Object packet received");
             }
         }
 
@@ -732,7 +753,7 @@ public class MainActivity extends AppCompatActivity {
                     // When this is an ack, we don't insert anything in the DB, we try to find that old message to ack it.
                     oldAPRSMessage = MainViewModel.appDb.aprsMessageDao().getMsgToAck(aprsMessage.toCallsign, aprsMessage.msgNum);
                     if (null == oldAPRSMessage) {
-                        Log.d("DEBUG", "Can't ack unknown APRS message from: " + aprsMessage.toCallsign + " with msg number: " + aprsMessage.msgNum);
+                        Timber.d("DEBUG", "Can't ack unknown APRS message from: " + aprsMessage.toCallsign + " with msg number: " + aprsMessage.msgNum);
                         return;
                     } else {
                         // Ack an old message
@@ -758,7 +779,8 @@ public class MainActivity extends AppCompatActivity {
 
     private enum ScreenType {
         SCREEN_VOICE,
-        SCREEN_CHAT
+        SCREEN_CHAT,
+        SCREEN_LOG
     };
 
     private void showScreen(ScreenType screenType) {
@@ -804,6 +826,29 @@ public class MainActivity extends AppCompatActivity {
             if (callsignSnackbar != null) {
                 callsignSnackbar.dismiss();
             }
+        } else if (screenType == ScreenType.SCREEN_LOG){
+            Timber.d("DEBUG", "Show log screen");
+        }
+
+        // now with fragments
+        Fragment fragment = null;
+
+        switch (screenType) {
+            case SCREEN_CHAT:
+                fragment = new ChatFragment();
+                break;
+            case SCREEN_VOICE:
+                fragment = new VoiceFragment();
+                break;
+            case SCREEN_LOG:
+                fragment = new LogFragment();
+                break;
+        }
+    
+        if (fragment != null) {
+            getSupportFragmentManager().beginTransaction()
+                .replace(R.id.main_fragment_container, fragment)
+                .commit();
         }
 
         activeScreenType = screenType;
@@ -1361,7 +1406,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateSMeter(int value) {
         if (value < 0 || value > 9) {
-            Log.d("DEBUG", "Warning: Unexpected S-Meter value (" + value + ") in updateSMeter().");
+            Timber.d("DEBUG", "Warning: Unexpected S-Meter value (" + value + ") in updateSMeter().");
             return;
         }
 
@@ -1614,7 +1659,7 @@ public class MainActivity extends AppCompatActivity {
                     initAudioRecorder();
                 } else {
                     // Permission denied, things will just be broken.
-                    Log.d("DEBUG", "Error: Need audio permission");
+                    Timber.d("DEBUG", "Error: Need audio permission");
                 }
                 return;
             }
@@ -1624,7 +1669,7 @@ public class MainActivity extends AppCompatActivity {
                     // Permission granted.
                 } else {
                     // Permission denied
-                    Log.d("DEBUG", "Warning: Need notifications permission to be able to send APRS chat message notifications");
+                    Timber.d("DEBUG", "Warning: Need notifications permission to be able to send APRS chat message notifications");
                 }
                 return;
             }
@@ -1634,7 +1679,7 @@ public class MainActivity extends AppCompatActivity {
                     // Permission granted.
                 } else {
                     // Permission denied
-                    Log.d("DEBUG", "Warning: Need fine location permission to include in APRS messages (user turned this setting on)");
+                    Timber.d("DEBUG", "Warning: Need fine location permission to include in APRS messages (user turned this setting on)");
                 }
                 return;
             }
@@ -1660,7 +1705,7 @@ public class MainActivity extends AppCompatActivity {
                 minBufferSize);
 
         if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
-            Log.d("DEBUG", "Audio init error");
+            Timber.d("DEBUG", "Audio init error");
         }
     }
 
@@ -1794,7 +1839,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
-            Log.d("DEBUG", "usbReceiver.onReceive()");
+            Timber.d("DEBUG", "usbReceiver.onReceive()");
 
             String action = intent.getAction();
             synchronized (this) {
@@ -2004,7 +2049,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             default:
-                Log.d("DEBUG", "Warning: Returned to MainActivity from unexpected request code: " + requestCode);
+                Timber.d("DEBUG", "Warning: Returned to MainActivity from unexpected request code: " + requestCode);
         }
     }
 

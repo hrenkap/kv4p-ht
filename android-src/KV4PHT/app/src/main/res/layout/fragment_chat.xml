@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/textModeContainerChat"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0000FF">
+
+<!-- <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/chatScrollView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="#00FF00"> 
+ -->    
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/aprsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_weight="1"
+        android:background="#FF0000">
+
+        <!-- APRS messages go here -->
+
+    </androidx.recyclerview.widget.RecyclerView>
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:layout_weight="0"
+        android:background="@color/primary_deselected"
+        android:gravity="center_vertical" />
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/jost"
+            android:text="To: "
+            android:textColor="@color/primary"
+            android:textSize="20dp"
+            android:layout_weight="0"/>
+
+        <EditText
+            android:id="@+id/textChatTo"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:textColor="@color/primary"
+            android:textSize="20dp"
+            android:maxLength="10"
+            android:minLines="1"
+            android:background="@android:color/transparent"
+            android:textColorHint="@color/primary_deselected"
+            android:hint="Callsign or CQ"
+            android:text="CQ"
+            android:imeOptions="actionDone">
+        </EditText>
+
+        <ImageButton
+            android:id="@+id/singleBeaconButton"
+            android:alpha="0.8"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginRight="8dp"
+            android:background="@drawable/ic_pin"
+            android:layout_gravity="right"
+            android:contentDescription="Send APRS position beacon"
+            android:onClick="singleBeaconButtonClicked"/>
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <EditText
+            android:id="@+id/textChatInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/primary"
+            android:layout_weight="1"
+            android:textSize="20dp"
+            android:maxLength="67"
+            android:minLines="1"
+            android:maxLines="2"
+            android:background="@android:color/transparent"
+            android:textColorHint="@color/primary_deselected"
+            android:hint="Write up to 67 chars..."
+            android:layout_marginRight="16dp"
+            android:imeOptions="actionSend">
+        </EditText>
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="0"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <ImageButton
+                    android:id="@+id/sendButton_XX"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/ic_send"
+                    android:layout_gravity="right"
+                    android:contentDescription="Send message"
+                    android:onClick="sendTextClicked"/>
+
+                <View
+                    android:id="@+id/sendButtonOverlay_XX"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/transparent"
+                    android:onClick="sendButtonOverlayClicked"/>
+            </FrameLayout>
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+</androidx.appcompat.widget.LinearLayoutCompat>
+<!-- </ScrollView> -->

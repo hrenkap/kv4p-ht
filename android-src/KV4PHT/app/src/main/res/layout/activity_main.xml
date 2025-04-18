@@ -456,6 +456,13 @@
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/main_fragment_container"
+                android:name="androidx.fragment.app.Fragment"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+        />
+
             <com.google.android.material.bottomnavigation.BottomNavigationView
                 android:id="@+id/bottomNavigationView"
                 android:layout_width="match_parent"

@@ -52,6 +52,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LiveData;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -777,7 +778,7 @@ public class RadioAudioService extends Service {
                 .build())
             .setTransferMode(AudioTrack.MODE_STREAM)
             .setBufferSizeInBytes(RX_AUDIO_MIN_BUFFER_SIZE)
-            .setSessionId(AudioManager.AUDIO_SESSION_ID_GENERATE)
+            //.setSessionId(AudioManager.AUDIO_SESSION_ID_GENERATE)
             .build();
         audioTrack.setVolume(0.0f);
         audioTrackVolume = 0.0f;
@@ -1378,6 +1379,13 @@ public class RadioAudioService extends Service {
             return;
         }
 
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+           != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted, return
+            Log.d("DEBUG", "Skipping position permission not given");
+            return;
+        }
+
         LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 
         if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(getBaseContext()) != ConnectionResult.SUCCESS) {
@@ -1390,7 +1398,8 @@ public class RadioAudioService extends Service {
         FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-        fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, cancellationTokenSource.getToken())
+        try {
+            fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, cancellationTokenSource.getToken())
             .addOnSuccessListener(new OnSuccessListener<Location>() {
                 @Override
                 public void onSuccess(Location location) {
@@ -1409,6 +1418,10 @@ public class RadioAudioService extends Service {
                     callbacks.unknownLocation();
                 }
             });
+        } catch (Exception e) {
+            Log.d("DEBUG", "Exception while trying to call location API.");
+            e.printStackTrace();
+        }
     }
 
     private void sendPositionBeacon(double latitude, double longitude) {
