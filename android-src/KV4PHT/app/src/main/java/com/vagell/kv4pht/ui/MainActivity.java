@@ -69,6 +69,8 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
 
 import timber.log.Timber;
 
@@ -90,6 +92,7 @@ import com.vagell.kv4pht.data.ChannelMemory;
 import com.vagell.kv4pht.databinding.ActivityMainBinding;
 import com.vagell.kv4pht.radio.RadioAudioService;
 
+import com.vagell.kv4pht.ui.FragmentsAdapter;
 import com.vagell.kv4pht.ui.ChatFragment;
 import com.vagell.kv4pht.ui.LogFragment;
 import com.vagell.kv4pht.ui.VoiceFragment;
@@ -197,6 +200,31 @@ public class MainActivity extends AppCompatActivity {
         ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         binding.setLifecycleOwner(this);
         binding.setVariable(BR.viewModel, viewModel);
+
+        ViewPager2 viewPager = findViewById(R.id.main_fragment_pager);
+        FragmentsAdapter adapter = new FragmentsAdapter(this);
+        viewPager.setAdapter(adapter);
+
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                ScreenType screenId;                 
+                switch (position) {
+                    case 1:
+                        screenId = ScreenType.SCREEN_CHAT;
+                        break;
+                    default:
+                    case 0:
+                        screenId = ScreenType.SCREEN_VOICE;
+                        break;
+                    case 2:
+                        screenId = ScreenType.SCREEN_CHAT;
+                        break;
+                }
+                onScreenChange(screenId);
+            }
+        });
 
         // Prepare a RecyclerView for the list of channel memories
         memoriesRecyclerView = findViewById(R.id.memoriesList);
@@ -788,7 +816,6 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void showScreen(ScreenType screenType) {
-        // TODO The right way to implement the bottom nav toggling the UI would be with Fragments.
         // Controls for voice mode
         findViewById(R.id.voiceModeLineHolder).setVisibility(screenType == ScreenType.SCREEN_CHAT ? View.GONE : View.VISIBLE);
         findViewById(R.id.pttButton).setVisibility(screenType == ScreenType.SCREEN_CHAT ? View.GONE : View.VISIBLE);
@@ -797,6 +824,34 @@ public class MainActivity extends AppCompatActivity {
 
         // Controls for text mode
         findViewById(R.id.textModeContainer).setVisibility(screenType == ScreenType.SCREEN_CHAT ? View.VISIBLE : View.GONE);
+
+        // now with fragments
+        int pageIndex = -1;
+
+        switch (screenType) {
+            case SCREEN_CHAT:
+                pageIndex = 1;
+                break;
+            case SCREEN_VOICE:
+                pageIndex = 0;
+                break;
+            case SCREEN_LOG:
+                pageIndex = 2;
+                break;
+        }
+    
+        if (pageIndex >= 0) {
+            ViewPager2 viewPager = findViewById(R.id.main_fragment_pager);
+            viewPager.setCurrentItem(pageIndex, /* smoothScroll= */ true);
+        }
+
+        if (activeScreenType != screenType) {
+            activeScreenType = screenType;
+            onScreenChange(screenType);
+        }
+    }
+
+    private void onScreenChange(ScreenType screenType) {
 
         if (screenType == ScreenType.SCREEN_CHAT) {
             // Stop scanning when we enter chat mode, we don't want to tx data on an unexpected
@@ -833,29 +888,6 @@ public class MainActivity extends AppCompatActivity {
         } else if (screenType == ScreenType.SCREEN_LOG){
             Timber.d("DEBUG", "Show log screen");
         }
-
-        // now with fragments
-        Fragment fragment = null;
-
-        switch (screenType) {
-            case SCREEN_CHAT:
-                fragment = new ChatFragment();
-                break;
-            case SCREEN_VOICE:
-                fragment = new VoiceFragment();
-                break;
-            case SCREEN_LOG:
-                fragment = new LogFragment();
-                break;
-        }
-    
-        if (fragment != null) {
-            getSupportFragmentManager().beginTransaction()
-                .replace(R.id.main_fragment_container, fragment)
-                .commit();
-        }
-
-        activeScreenType = screenType;
     }
 
     private void showCallsignSnackbar(CharSequence snackbarMsg) {

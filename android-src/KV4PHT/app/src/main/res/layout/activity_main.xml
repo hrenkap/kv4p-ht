@@ -456,8 +456,8 @@
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/main_fragment_container"
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/main_fragment_pager"
                 android:name="androidx.fragment.app.Fragment"
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
