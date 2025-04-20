@@ -38,6 +38,8 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import timber.log.Timber;
+
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.vagell.kv4pht.databinding.ActivityFirmwareBinding;
 
@@ -110,7 +112,7 @@ public class FirmwareActivity extends AppCompatActivity {
             public void run() {
                 UsbSerialPort serialPort = RadioAudioService.getUsbSerialPort();
                 if (null == serialPort) {
-                    Log.d("DEBUG", "Error: Unexpected null serial port in FirmwareActivity.");
+                    Timber.tag("DEBUG").d("Error: Unexpected null serial port in FirmwareActivity.");
                     // TODO report in UI that serial port not found, with option to retry
                 }
                 FirmwareUtils.flashFirmware(ctx, serialPort, new FirmwareUtils.FirmwareCallback() {
@@ -146,13 +148,13 @@ public class FirmwareActivity extends AppCompatActivity {
 
                     @Override
                     public void doneFlashing(boolean success) {
-                        Log.d("DEBUG", "doneFlashing, success: " + success);
+                        Timber.tag("DEBUG").d("doneFlashing, success: " + success);
 
                         if (success) {
                             setResult(Activity.RESULT_OK, getIntent());
                             finish();
                         } else {
-                            Log.d("DEBUG", "Error: Flashing firmware failed.");
+                            Timber.tag("DEBUG").d("Error: Flashing firmware failed.");
 
                             CharSequence snackbarMsg = "Failed to flash firmware. If it keeps failing, use kv4p.com web flasher.";
                             errorSnackbar = Snackbar.make(ctx, findViewById(R.id.firmwareTopLevelView), snackbarMsg, Snackbar.LENGTH_INDEFINITE)

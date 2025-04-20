@@ -67,6 +67,9 @@ import com.hoho.android.usbserial.driver.UsbSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.driver.UsbSerialProber;
 import com.hoho.android.usbserial.util.SerialInputOutputManager;
+
+import timber.log.Timber;
+
 import com.vagell.kv4pht.R;
 import com.vagell.kv4pht.aprs.parser.APRSPacket;
 import com.vagell.kv4pht.aprs.parser.APRSTypes;
@@ -339,7 +342,7 @@ public class RadioAudioService extends Service {
 
     public void setAprsBeaconPosition(boolean aprsBeaconPosition) {
         if (!this.aprsBeaconPosition && aprsBeaconPosition) { // If it was off, and now turned on...
-            Log.d("DEBUG", "Starting APRS position beaconing every " + APRS_BEACON_MINS + " mins");
+            Timber.tag("DEBUG").d("Starting APRS position beaconing every %s mins", APRS_BEACON_MINS);
             // Start beaconing
             aprsBeaconHandler = new Handler(Looper.getMainLooper());
             aprsBeaconRunnable = new Runnable() {
@@ -356,7 +359,7 @@ public class RadioAudioService extends Service {
         }
 
         if (!aprsBeaconPosition) {
-            Log.d("DEBUG", "Stopping APRS position beaconing");
+            Timber.tag("DEBUG").d("Stopping APRS position beaconing");
 
             // Stop beaconing
             if (null != aprsBeaconHandler) {
@@ -676,7 +679,7 @@ public class RadioAudioService extends Service {
         }
 
         if (channelMemoriesLiveData == null) {
-            Log.d("DEBUG", "Error: attempted tuneToMemory() but channelMemories was never set.");
+            Timber.tag("DEBUG").d("Error: attempted tuneToMemory() but channelMemories was never set.");
             return;
         }
         List<ChannelMemory> channelMemories = channelMemoriesLiveData.getValue();
@@ -801,7 +804,7 @@ public class RadioAudioService extends Service {
                 long elapsedSec = (System.currentTimeMillis() / 1000) - startTxTimeSec;
                 if (elapsedSec
                     > RUNAWAY_TX_TIMEOUT_SEC) { // Check this because multiple tx may have happened with RUNAWAY_TX_TIMEOUT_SEC.
-                    Log.d("DEBUG", "Warning: runaway tx timeout reached, PTT stopped.");
+                    Timber.tag("DEBUG").d("Warning: runaway tx timeout reached, PTT stopped.");
                     endPtt();
                 }
             } catch (InterruptedException e) {
@@ -819,7 +822,7 @@ public class RadioAudioService extends Service {
             Optional.ofNullable(audioTrack).ifPresent(t -> t.setVolume(0.0f));
             Optional.ofNullable(callbacks).ifPresent(RadioAudioServiceCallbacks::txStarted);
         } else {
-            Log.d("DEBUG", "Warning: Attempted startPtt when it should not happen.");
+            Timber.tag("DEBUG").d("Warning: Attempted startPtt when it should not happen.");
             new Throwable().printStackTrace();
         }
     }
@@ -839,7 +842,7 @@ public class RadioAudioService extends Service {
     }
 
     private void findESP32Device() {
-        Log.d("DEBUG", "findESP32Device()");
+        Timber.tag("DEBUG").d("findESP32Device()");
 
         setMode(MODE_STARTUP);
         esp32Device = null;
@@ -855,12 +858,12 @@ public class RadioAudioService extends Service {
         }
 
         if (esp32Device == null) {
-            Log.d("DEBUG", "No ESP32 detected");
+            Timber.tag("DEBUG").d("No ESP32 detected");
             if (callbacks != null) {
                 callbacks.radioMissing();
             }
         } else {
-            Log.d("DEBUG", "Found ESP32.");
+            Timber.tag("DEBUG").d("Found ESP32.");
             if (callbacks != null) {
                 callbacks.hideSnackbar();
             }
@@ -869,11 +872,11 @@ public class RadioAudioService extends Service {
     }
 
     private boolean isESP32Device(UsbDevice device) {
-        Log.d("DEBUG", "isESP32Device()");
+        Timber.tag("DEBUG").d("isESP32Device()");
 
         int vendorId = device.getVendorId();
         int productId = device.getProductId();
-        Log.d("DEBUG", "vendorId: " + vendorId + " productId: " + productId + " name: " + device.getDeviceName());
+        Timber.tag("DEBUG").d("vendorId: " + vendorId + " productId: " + productId + " name: " + device.getDeviceName());
         // TODO these vendor and product checks might be too rigid/brittle for future PCBs,
         // especially those that are more custom and not a premade dev board. But we need some way
         // to tell if the given USB device is an ESP32 so we can interact with the right device.
@@ -886,37 +889,62 @@ public class RadioAudioService extends Service {
     }
 
     public void setupSerialConnection() {
-        Log.d("DEBUG", "setupSerialConnection()");
+        Timber.tag("DEBUG").d("setupSerialConnection()");
 
         // Find all available drivers from attached devices.
         UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
         List<UsbSerialDriver> availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(manager);
         if (availableDrivers.isEmpty()) {
-            Log.d("DEBUG", "Error: no available USB drivers.");
+            Timber.tag("DEBUG").d("Error: no available USB drivers.");
             if (callbacks != null) {
                 callbacks.radioMissing();
             }
             return;
         }
+
+        Timber.tag("DEBUG").d("There are %s available USB drivers.", availableDrivers.size());
 
         // Open a connection to the first available driver.
-        UsbSerialDriver driver = availableDrivers.get(0);
-        UsbDeviceConnection connection = manager.openDevice(driver.getDevice());
-        if (connection == null) {
-            Log.d("DEBUG", "Error: couldn't open USB device.");
+        UsbSerialDriver connectedDriver = null;
+        UsbDeviceConnection connectionCand = null;
+
+        for (UsbSerialDriver driver : availableDrivers) {
+            connectionCand = manager.openDevice(driver.getDevice());
+            if (connectionCand != null) {
+                connectedDriver = driver;
+                break;
+            }
+            Timber.tag("DEBUG").d("cannot connect to device %s", driver.getDevice());
+        }
+        
+        if (connectionCand == null) {
+            Timber.tag("DEBUG").d("Error: couldn't open any USB device.");
             if (callbacks != null) {
                 callbacks.radioMissing();
             }
             return;
         }
 
+        UsbSerialDriver driver = connectedDriver;
+        UsbDeviceConnection connection = connectionCand;
+
+//        UsbSerialDriver driver = availableDrivers.get(0);
+//        UsbDeviceConnection connection = manager.openDevice(driver.getDevice());
+//        if (connection == null) {
+//            Timber.tag("DEBUG").d("Error: couldn't open USB device.");
+//            if (callbacks != null) {
+//                callbacks.radioMissing();
+//            }
+//            return;
+//        }
+
         serialPort = driver.getPorts().get(0); // Most devices have just one port (port 0)
-        Log.d("DEBUG", "serialPort: " + serialPort);
+        Timber.tag("DEBUG").d("serialPort: " + serialPort);
         try {
             serialPort.open(connection);
             serialPort.setParameters(115200, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
         } catch (Exception e) {
-            Log.d("DEBUG", "Error: couldn't open USB serial port.");
+            Timber.tag("DEBUG").d("Error: couldn't open USB serial port.");
             if (callbacks != null) {
                 callbacks.radioMissing();
             }
@@ -938,7 +966,7 @@ public class RadioAudioService extends Service {
 
             @Override
             public void onRunError(Exception e) {
-                Log.d("DEBUG", "Error reading from ESP32.");
+                Timber.tag("DEBUG").d("Error reading from ESP32.");
                 if (audioTrack != null) {
                     audioTrack.stop();
                 }
@@ -964,11 +992,11 @@ public class RadioAudioService extends Service {
         checkedFirmwareVersion = false;
         gotHello = false;
 
-        Log.d("DEBUG", "Connected to ESP32.");
+        Timber.tag("DEBUG").d("Connected to ESP32.");
         timeOutHandler.removeCallbacksAndMessages(null);
         timeOutHandler.postDelayed(() -> {
             if (!gotHello) {
-                Log.d("DEBUG", "Error: No HELLO received from module.");
+                Timber.tag("DEBUG").d("Error: No HELLO received from module.");
                 callbacks.missingFirmware();
                 setMode(MODE_BAD_FIRMWARE);
             }
@@ -979,7 +1007,7 @@ public class RadioAudioService extends Service {
      * @param radioType should be RADIO_TYPE_UHF or RADIO_TYPE_VHF
      */
     public void setRadioType(String radioType) {
-        Log.d("DEBUG", "setRadioType: " + radioType);
+        Timber.tag("DEBUG").d("setRadioType: " + radioType);
 
         if (!this.radioType.equals(radioType)) {
             this.radioType = radioType;
@@ -1027,7 +1055,7 @@ public class RadioAudioService extends Service {
         timeOutHandler.removeCallbacksAndMessages(null);
         timeOutHandler.postDelayed(() -> {
             if (mode == MODE_STARTUP && !checkedFirmwareVersion) {
-                Log.d("DEBUG", "Error: Did not hear back from ESP32 after requesting its firmware version. Offering to flash.");
+                Timber.tag("DEBUG").d("Error: Did not hear back from ESP32 after requesting its firmware version. Offering to flash.");
                 callbacks.missingFirmware();
                 setMode(MODE_BAD_FIRMWARE);
             }
@@ -1075,7 +1103,7 @@ public class RadioAudioService extends Service {
 
         // Make sure channelMemoriesLiveData is set and has items.
         if (channelMemoriesLiveData == null) {
-            Log.d("DEBUG", "Error: attempted nextScan() but channelMemories was never set.");
+            Timber.tag("DEBUG").d("Error: attempted nextScan() but channelMemories was never set.");
             return;
         }
         List<ChannelMemory> channelMemories = channelMemoriesLiveData.getValue();
@@ -1106,7 +1134,7 @@ public class RadioAudioService extends Service {
             try {
                 memoryFreqFloat = Float.parseFloat(candidate.frequency);
             } catch (Exception e) {
-                Log.d("DEBUG", "Memory with id " + candidate.memoryId + " had invalid frequency.");
+                Timber.tag("DEBUG").d("Memory with id " + candidate.memoryId + " had invalid frequency.");
             }
             if (!candidate.skipDuringScan && memoryFreqFloat >= minRadioFreq && memoryFreqFloat <= maxRadioFreq) {
                 // Reset silence since we found an active memory.
@@ -1128,7 +1156,7 @@ public class RadioAudioService extends Service {
         } while (nextIndex != firstTriedIndex);
 
         // If we reach here, all memories are marked skipDuringScan.
-        Log.d("DEBUG", "Warning: All memories are skipDuringScan, no next memory found to scan to.");
+        Timber.tag("DEBUG").d("Warning: All memories are skipDuringScan, no next memory found to scan to.");
     }
 
     private float[] applyMicGain(float[] audioBuffer) {
@@ -1350,7 +1378,7 @@ public class RadioAudioService extends Service {
                         }
                     }
                 } catch (Exception e) {
-                    Log.d("DEBUG", "Unable to parse an APRSPacket, skipping.");
+                    Timber.tag("DEBUG").d("Unable to parse an APRSPacket, skipping.");
                     return;
                 }
 
@@ -1365,7 +1393,7 @@ public class RadioAudioService extends Service {
             afskDemodulator = new Afsk1200MultiDemodulator(AUDIO_SAMPLE_RATE, packetHandler);
             afskModulator = new Afsk1200Modulator(AUDIO_SAMPLE_RATE);
         } catch (Exception e) {
-            Log.d("DEBUG", "Unable to create AFSK modem objects.");
+            Timber.tag("DEBUG").d("Unable to create AFSK modem objects.");
         }
     }
 
@@ -1375,21 +1403,21 @@ public class RadioAudioService extends Service {
         }
 
         if (getMode() != MODE_RX) { // Can only beacon in rx mode (e.g. not tx or scan)
-            Log.d("DEBUG", "Skipping position beacon because not in RX mode");
+            Timber.tag("DEBUG").d("Skipping position beacon because not in RX mode");
             return;
         }
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
            != PackageManager.PERMISSION_GRANTED) {
             // Permission is not granted, return
-            Log.d("DEBUG", "Skipping position permission not given");
+            Timber.tag("DEBUG").d("Skipping position permission not given");
             return;
         }
 
         LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 
         if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(getBaseContext()) != ConnectionResult.SUCCESS) {
-            Log.d("DEBUG", "Unable to beacon position because Android device is missing Google Play Services, needed to get GPS location.");
+            Timber.tag("DEBUG").d("Unable to beacon position because Android device is missing Google Play Services, needed to get GPS location.");
             callbacks.unknownLocation();
             return;
         }
@@ -1419,18 +1447,18 @@ public class RadioAudioService extends Service {
                 }
             });
         } catch (Exception e) {
-            Log.d("DEBUG", "Exception while trying to call location API.");
+            Timber.tag("DEBUG").d("Exception while trying to call location API.");
             e.printStackTrace();
         }
     }
 
     private void sendPositionBeacon(double latitude, double longitude) {
         if (getMode() != MODE_RX) { // Can only beacon in rx mode (e.g. not tx or scan)
-            Log.d("DEBUG", "Skipping position beacon because not in RX mode");
+            Timber.tag("DEBUG").d("Skipping position beacon because not in RX mode");
             return;
         }
 
-        Log.d("DEBUG", "Beaconing position via APRS now");
+        Timber.tag("DEBUG").d("Beaconing position via APRS now");
 
         if (aprsPositionAccuracy == APRS_POSITION_APPROX) {
             // Fuzz the location (2 decimal places gives a spot in the neighborhood)
@@ -1452,7 +1480,7 @@ public class RadioAudioService extends Service {
 
             callbacks.sentAprsBeacon(latitude, longitude);
         } catch (Exception e) {
-            Log.d("DEBUG", "Exception while trying to beacon APRS location.");
+            Timber.tag("DEBUG").d("Exception while trying to beacon APRS location.");
             e.printStackTrace();
         }
     }
@@ -1489,11 +1517,11 @@ public class RadioAudioService extends Service {
         digipeaters.add(new Digipeater("WIDE1*"));
         digipeaters.add(new Digipeater("WIDE2-1"));
         if (null == callsign || callsign.trim().equals("")) {
-            Log.d("DEBUG", "Error: Tried to send a chat message with no sender callsign.");
+            Timber.tag("DEBUG").d("Error: Tried to send a chat message with no sender callsign.");
             return -1;
         }
         if (null == targetCallsign || targetCallsign.trim().equals("")) {
-            Log.d("DEBUG", "Warning: Tried to send a chat message with no recipient callsign, defaulted to 'CQ'.");
+            Timber.tag("DEBUG").d("Warning: Tried to send a chat message with no recipient callsign, defaulted to 'CQ'.");
             targetCallsign = "CQ";
         }
 
@@ -1522,10 +1550,10 @@ public class RadioAudioService extends Service {
 
     private void txAX25Packet(Packet ax25Packet) {
         if (!txAllowed) {
-            Log.d("DEBUG", "Tried to send an AX.25 packet when tx is not allowed, did not send.");
+            Timber.tag("DEBUG").d("Tried to send an AX.25 packet when tx is not allowed, did not send.");
             return;
         }
-        Log.d("DEBUG", "Sending AX25 packet: " + ax25Packet);
+        Timber.tag("DEBUG").d("Sending AX25 packet: " + ax25Packet);
         startPtt();
         float[] opusFrame = new float[OPUS_FRAME_SIZE];
         // Send lead-in silence
@@ -1561,7 +1589,7 @@ public class RadioAudioService extends Service {
 
     private void showNotification(String notificationChannelId, int notificationTypeId, String title, String message, String tapIntentName) {
         if (notificationChannelId == null || title == null || message == null) {
-            Log.d("DEBUG", "Unexpected null in showNotification.");
+            Timber.tag("DEBUG").d("Unexpected null in showNotification.");
             return;
         }
 

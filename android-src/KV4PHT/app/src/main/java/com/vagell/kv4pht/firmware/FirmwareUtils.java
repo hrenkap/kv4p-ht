@@ -3,6 +3,8 @@ package com.vagell.kv4pht.firmware;
 import android.content.Context;
 import android.util.Log;
 
+import timber.log.Timber;
+
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.vagell.kv4pht.R;
 import com.vagell.kv4pht.firmware.bearconsole.CommandInterfaceESP32;
@@ -39,7 +41,7 @@ public class FirmwareUtils {
 
     public static void flashFirmware(Context ctx, UsbSerialPort usbSerialPort, FirmwareCallback callback) {
         if (isFlashing) {
-            Log.d("DEBUG", "Warning: Attempted to call FirmwareUtils.flashFirmware() while already flashing.");
+            Timber.tag("DEBUG").d("Warning: Attempted to call FirmwareUtils.flashFirmware() while already flashing.");
             return;
         }
         isFlashing = true;
@@ -53,12 +55,12 @@ public class FirmwareUtils {
         UploadSTM32CallBack UpCallback = new UploadSTM32CallBack() {
             @Override
             public void onPreUpload() {
-                Log.d("DEBUG", "onPreUpload");
+                Timber.tag("DEBUG").d("onPreUpload");
             }
 
             @Override
             public void onUploading(int value) {
-                Log.d("DEBUG", "onUploading: " + value);
+                Timber.tag("DEBUG").d("onUploading: " + value);
 
                 // Some of the file writes take a while, show finer-grained progress for those.
                 if (progressPercent >= 20 && progressPercent < 30) {
@@ -73,22 +75,22 @@ public class FirmwareUtils {
 
             @Override
             public void onInfo(String value) {
-                Log.d("DEBUG", "onInfo: " + value);
+                Timber.tag("DEBUG").d("onInfo: " + value);
             }
 
             @Override
             public void onPostUpload(boolean success) {
-                Log.d("DEBUG", "onPostUpload: " + success);
+                Timber.tag("DEBUG").d("onPostUpload: " + success);
             }
 
             @Override
             public void onCancel() {
-                Log.d("DEBUG", "onCancel");
+                Timber.tag("DEBUG").d("onCancel");
             }
 
             @Override
             public void onError(UploadSTM32Errors err) {
-                Log.d("DEBUG", "onError: " + err);
+                Timber.tag("DEBUG").d("onError: " + err);
             }
         };
         cmd = new CommandInterfaceESP32(ctx, UpCallback, usbSerialPort);
@@ -98,11 +100,11 @@ public class FirmwareUtils {
         firmwareFile3 = ctx.getResources().openRawResource(FIRMWARE_FILE_3_ID);
         firmwareFile4 = ctx.getResources().openRawResource(FIRMWARE_FILE_4_ID);
 
-        Log.d("DEBUG", "Attempting to init ESP32 for firmware flash");
+        Timber.tag("DEBUG").d("Attempting to init ESP32 for firmware flash");
 
         boolean ret = cmd.initChip();
         if (!ret) {
-            Log.d("DEBUG", "ESP32 failed to init, return value: " + ret);
+            Timber.tag("DEBUG").d("ESP32 failed to init, return value: " + ret);
             failed = true;
         }
         if (!failed) {
@@ -113,7 +115,7 @@ public class FirmwareUtils {
             cmd.init();
             trackProgress(callback, 20);
 
-            Log.d("DEBUG", "Flashing firmware");
+            Timber.tag("DEBUG").d("Flashing firmware");
             cmd.flashData(readFirmwareBytes(firmwareFile1), 0x1000, 0);
             trackProgress(callback, 30);
             cmd.flashData(readFirmwareBytes(firmwareFile2), 0x8000, 0);
@@ -125,7 +127,7 @@ public class FirmwareUtils {
             // we have finished flashing, reboot ESP32
             cmd.reset();
 
-            Log.d("DEBUG", "Done flashing firmware");
+            Timber.tag("DEBUG").d("Done flashing firmware");
         }
         callback.doneFlashing(!failed);
         progressPercent = 0;
@@ -138,7 +140,7 @@ public class FirmwareUtils {
     }
 
     private static byte[] readFirmwareBytes(InputStream stream) {
-        Log.d("DEBUG", "Reading firmware binary file");
+        Timber.tag("DEBUG").d("Reading firmware binary file");
         ByteArrayOutputStream byteArrayOutputStream = null;
         int i;
         try {
