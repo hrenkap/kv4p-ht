@@ -61,9 +61,8 @@ public class ChatFragment extends Fragment {
         sendButton = view.findViewById(R.id.sendButton_XX);
         sendButtonOverlay = view.findViewById(R.id.sendButtonOverlay_XX);
 
-
         // Handle enabling/disabling sendButton, etc.
-        if (callsign.isBlank()) {
+        if (callsign == null || callsign.isBlank()) {
             sendButton.setEnabled(false);
             sendButtonOverlay.setVisibility(View.VISIBLE);
         } else {

@@ -89,6 +89,7 @@ import com.vagell.kv4pht.aprs.parser.WeatherField;
 import com.vagell.kv4pht.data.APRSMessage;
 import com.vagell.kv4pht.data.AppSetting;
 import com.vagell.kv4pht.data.ChannelMemory;
+import com.vagell.kv4pht.logging.BufferedLogger;
 import com.vagell.kv4pht.databinding.ActivityMainBinding;
 import com.vagell.kv4pht.radio.RadioAudioService;
 
@@ -186,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         if (/*BuildConfig.DEBUG && */Timber.treeCount() == 0) {
-            Timber.plant(new Timber.DebugTree());
+            Timber.plant(BufferedLogger.getSingleton());
         }
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -853,6 +854,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void onScreenChange(ScreenType screenType) {
 
+        Timber.d("Screen changed to "+screenType);
         if (screenType == ScreenType.SCREEN_CHAT) {
             // Stop scanning when we enter chat mode, we don't want to tx data on an unexpected
             // frequency. User must set it manually (or select it before coming to chat mode, but

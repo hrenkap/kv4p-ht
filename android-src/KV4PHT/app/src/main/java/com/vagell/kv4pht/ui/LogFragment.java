@@ -30,10 +30,11 @@ import androidx.fragment.app.Fragment;
 
 import timber.log.Timber;
 
+import com.vagell.kv4pht.logging.BufferedLogger;
 import com.vagell.kv4pht.ui.MainActivity;
 import com.vagell.kv4pht.R;
 
-public class LogFragment extends Fragment {
+public class LogFragment extends Fragment implements BufferedLogger.LogListener {
 
     private TextView textView;
 
@@ -50,24 +51,16 @@ public class LogFragment extends Fragment {
                               @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        BufferedLogger.getSingleton().addListener(this);
+
         textView = (TextView) view.findViewById(R.id.logTextView);
 
-        textView.setText("Hello Log!\nLine 1\nLine 2\nLine 3\n"+
-        "Line 4\n" + //
-        "Line 5\n" + //
-        "Line 6\n" + //
-        "Line 7\n" + //
-        "Line 8\n" + //
-        "Line 9\n" + //
-        "Line 10\n" + //
-        "Line 11\n" + //
-        "Line 12\n" + //
-        "Line 13\n" + //
-        "Line 14\n" + //
-        "Line 15\n" + //
-        "Line 16\n" + //
-        "...");
+        textView.setText("");
 
         Timber.d("Log fragment created");
+    }
+
+    public void onNewLog(String line) {
+        textView.setText(textView.getText()+line+"\n");
     }
 }

@@ -32,8 +32,10 @@
         android:text="Logs:\n"
         android:textColor="#FFFFFF"
         android:textSize="20dp"
-        android:padding="8dp"/>
-
+        android:textIsSelectable="true"
+        android:padding="16dp"
+        android:textAppearance="?android:textAppearanceSmall"
+        android:typeface="monospace" />
 
     </LinearLayout>
 </ScrollView>
