@@ -228,8 +228,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Prepare a RecyclerView for the list of channel memories
-        memoriesRecyclerView = findViewById(R.id.memoriesList);
-        memoriesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+    // memoriesRecyclerView = findViewById(R.id.memoriesList);
+    // memoriesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         memoriesAdapter = new MemoriesAdapter(new MemoriesAdapter.MemoryListener() {
             @Override
             public void onMemoryClick(ChannelMemory memory) {
@@ -282,7 +282,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(intent, REQUEST_EDIT_MEMORY);
             }
         });
-        memoriesRecyclerView.setAdapter(memoriesAdapter);
+    //    memoriesRecyclerView.setAdapter(memoriesAdapter);
 
         // Observe the channel memories LiveData in MainViewModel (so the RecyclerView can populate with the memories)
         viewModel.getChannelMemories().observe(this, new Observer<List<ChannelMemory>>() {
@@ -302,10 +302,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Prepare a RecyclerView for the list APRS messages we've received in the past
-        aprsRecyclerView = findViewById(R.id.aprsRecyclerView);
-        aprsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+    //    aprsRecyclerView = findViewById(R.id.aprsRecyclerView);
+    //    aprsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         aprsAdapter = new APRSAdapter();
-        aprsRecyclerView.setAdapter(aprsAdapter);
+    //    aprsRecyclerView.setAdapter(aprsAdapter);
 
         // Observe the APRS messages LiveData in MainViewModel (so the RecyclerView can populate with the APRS messages)
         viewModel.getAPRSMessages().observe(this, new Observer<List<APRSMessage>>() {
@@ -316,6 +316,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // Scroll to the bottom when a new message is added
                 if (aprsMessages != null && !aprsMessages.isEmpty()) {
+                // TODO: move to fragment
                     aprsRecyclerView.scrollToPosition(aprsMessages.size() - 1);
                 }
             }
@@ -371,6 +372,7 @@ public class MainActivity extends AppCompatActivity {
             RadioAudioService.RadioAudioServiceCallbacks callbacks = new RadioAudioService.RadioAudioServiceCallbacks() {
                 @Override
                 public void radioMissing() {
+                    Timber.tag("DEBUG").d("radio missing");
                     sMeterUpdate(0); // No rx when no radio
                     showUSBSnackbar();
                     findViewById(R.id.pttButton).setClickable(false);
@@ -378,6 +380,7 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void radioConnected() {
+                    Timber.tag("DEBUG").d("radio connected");
                     hideSnackbar();
                     applySettings();
                     findViewById(R.id.pttButton).setClickable(true);
@@ -594,7 +597,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             radioAudioService = null;
-            Timber.d("DEBUG", "RadioAudioService disconnected from MainActivity.");
+            Timber.tag("DEBUG").d("RadioAudioService disconnected from MainActivity.");
             // TODO if this is unexpected we should probably try to restart the service.
         }
     };
@@ -733,7 +736,7 @@ public class MainActivity extends AppCompatActivity {
             aprsMessage.windForce = (null == weatherField.getWindSpeed()) ? 0 : weatherField.getWindSpeed();
             aprsMessage.windDir = (null == weatherField.getWindDirection()) ? "" : Utilities.degressToCardinal(weatherField.getWindDirection());
 
-            // Timber.d("DEBUG", "Weather packet received");
+            // Timber.tag("DEBUG").d("Weather packet received");
         } else if (infoField.getDataTypeIdentifier() == ':') { // APRS "message" type. What we expect for our text chat.
             aprsMessage.type = APRSMessage.MESSAGE_TYPE;
             MessagePacket messagePacket = new MessagePacket(infoField.getRawBytes(), aprsPacket.getDestinationCall());
@@ -747,20 +750,20 @@ public class MainActivity extends AppCompatActivity {
                         aprsMessage.msgNum = Integer.parseInt(msgNumStr.trim());
                     }
                 } catch (Exception e) {
-                    Timber.d("DEBUG", "Warning: Bad message number in APRS ack, ignoring: '" + messagePacket.getMessageNumber() + "'");
+                    Timber.tag("DEBUG").d("Warning: Bad message number in APRS ack, ignoring: '" + messagePacket.getMessageNumber() + "'");
                     e.printStackTrace();
                     return;
                 }
-                // Timber.d("DEBUG", "Message ack received");
+                // Timber.tag("DEBUG").d("Message ack received");
             } else {
                 aprsMessage.msgBody = messagePacket.getMessageBody();
-                // Timber.d("DEBUG", "Message packet received");
+                // Timber.tag("DEBUG").d("Message packet received");
             }
         } else if (infoField.getDataTypeIdentifier() == ';') { // APRS "object"
             aprsMessage.type = APRSMessage.OBJECT_TYPE;
             if (null != objectField) {
                 aprsMessage.objName = objectField.getObjectName();
-                // Timber.d("DEBUG", "Object packet received");
+                // Timber.tag("DEBUG").d("Object packet received");
             }
         }
 
@@ -786,7 +789,7 @@ public class MainActivity extends AppCompatActivity {
                     // When this is an ack, we don't insert anything in the DB, we try to find that old message to ack it.
                     oldAPRSMessage = MainViewModel.appDb.aprsMessageDao().getMsgToAck(aprsMessage.toCallsign, aprsMessage.msgNum);
                     if (null == oldAPRSMessage) {
-                        Timber.d("DEBUG", "Can't ack unknown APRS message from: " + aprsMessage.toCallsign + " with msg number: " + aprsMessage.msgNum);
+                        Timber.tag("DEBUG").d("Can't ack unknown APRS message from: " + aprsMessage.toCallsign + " with msg number: " + aprsMessage.msgNum);
                         return;
                     } else {
                         // Ack an old message
@@ -818,13 +821,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void showScreen(ScreenType screenType) {
         // Controls for voice mode
-        findViewById(R.id.voiceModeLineHolder).setVisibility(screenType == ScreenType.SCREEN_CHAT ? View.GONE : View.VISIBLE);
-        findViewById(R.id.pttButton).setVisibility(screenType == ScreenType.SCREEN_CHAT ? View.GONE : View.VISIBLE);
-        findViewById(R.id.memoriesList).setVisibility(screenType == ScreenType.SCREEN_CHAT ? View.GONE : View.VISIBLE);
-        findViewById(R.id.voiceModeBottomControls).setVisibility(screenType == ScreenType.SCREEN_CHAT ? View.GONE : View.VISIBLE);
+    //    findViewById(R.id.voiceModeLineHolder).setVisibility(screenType == ScreenType.SCREEN_CHAT ? View.GONE : View.VISIBLE);
+    //    findViewById(R.id.pttButton).setVisibility(screenType == ScreenType.SCREEN_CHAT ? View.GONE : View.VISIBLE);
+    //    findViewById(R.id.memoriesList).setVisibility(screenType == ScreenType.SCREEN_CHAT ? View.GONE : View.VISIBLE);
+    //    findViewById(R.id.voiceModeBottomControls).setVisibility(screenType == ScreenType.SCREEN_CHAT ? View.GONE : View.VISIBLE);
 
         // Controls for text mode
-        findViewById(R.id.textModeContainer).setVisibility(screenType == ScreenType.SCREEN_CHAT ? View.VISIBLE : View.GONE);
+    //    findViewById(R.id.textModeContainer).setVisibility(screenType == ScreenType.SCREEN_CHAT ? View.VISIBLE : View.GONE);
 
         // now with fragments
         int pageIndex = -1;
@@ -868,16 +871,16 @@ public class MainActivity extends AppCompatActivity {
             // can transmit.
             if (callsign == null || callsign.length() == 0) {
                 showCallsignSnackbar("Set your callsign to send text chat");
-                ImageButton sendButton = findViewById(R.id.sendButton);
-                sendButton.setEnabled(false);
-                findViewById(R.id.sendButtonOverlay).setVisibility(View.VISIBLE);
+//                ImageButton sendButton = findViewById(R.id.sendButton);
+//                sendButton.setEnabled(false);
+//                findViewById(R.id.sendButtonOverlay).setVisibility(View.VISIBLE);
             } else {
-                ImageButton sendButton = findViewById(R.id.sendButton);
-                sendButton.setEnabled(true);
+//                ImageButton sendButton = findViewById(R.id.sendButton);
+//                sendButton.setEnabled(true);
                 if (callsignSnackbar != null) {
                     callsignSnackbar.dismiss();
                 }
-                findViewById(R.id.sendButtonOverlay).setVisibility(View.GONE);
+//                findViewById(R.id.sendButtonOverlay).setVisibility(View.GONE);
             }
         } else if (screenType == ScreenType.SCREEN_VOICE){
             hideKeyboard();
@@ -888,7 +891,7 @@ public class MainActivity extends AppCompatActivity {
                 callsignSnackbar.dismiss();
             }
         } else if (screenType == ScreenType.SCREEN_LOG){
-            Timber.d("DEBUG", "Show log screen");
+            Timber.tag("DEBUG").d("Show log screen");
         }
     }
 
@@ -946,8 +949,9 @@ public class MainActivity extends AppCompatActivity {
     public void sendButtonOverlayClicked(View view) {
         if (callsign == null || callsign.length() == 0) {
             showCallsignSnackbar("Set your callsign to send text chat");
-            ImageButton sendButton = findViewById(R.id.sendButton);
-            sendButton.setEnabled(false);
+            // TODO move to fragment
+            //            ImageButton sendButton = findViewById(R.id.sendButton);
+//            sendButton.setEnabled(false);
         }
     }
 
@@ -1099,11 +1103,11 @@ public class MainActivity extends AppCompatActivity {
 
                             // Enable or prevent APRS texting depending on if callsign was set.
                             if (callsign.length() == 0) {
-                                findViewById(R.id.sendButton).setEnabled(false);
-                                findViewById(R.id.sendButtonOverlay).setVisibility(View.VISIBLE);
+//                                findViewById(R.id.sendButton).setEnabled(false);
+//                                findViewById(R.id.sendButtonOverlay).setVisibility(View.VISIBLE);
                             } else {
-                                findViewById(R.id.sendButton).setEnabled(true);
-                                findViewById(R.id.sendButtonOverlay).setVisibility(View.GONE);
+//                                findViewById(R.id.sendButton).setEnabled(true);
+//                                findViewById(R.id.sendButtonOverlay).setVisibility(View.GONE);
                             }
 
                             if (radioAudioService != null) {
@@ -1444,7 +1448,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateSMeter(int value) {
         if (value < 0 || value > 9) {
-            Timber.d("DEBUG", "Warning: Unexpected S-Meter value (" + value + ") in updateSMeter().");
+            Timber.tag("DEBUG").d("Warning: Unexpected S-Meter value (" + value + ") in updateSMeter().");
             return;
         }
 
@@ -1697,7 +1701,7 @@ public class MainActivity extends AppCompatActivity {
                     initAudioRecorder();
                 } else {
                     // Permission denied, things will just be broken.
-                    Timber.d("DEBUG", "Error: Need audio permission");
+                    Timber.tag("DEBUG").d("Error: Need audio permission");
                 }
                 return;
             }
@@ -1707,7 +1711,7 @@ public class MainActivity extends AppCompatActivity {
                     // Permission granted.
                 } else {
                     // Permission denied
-                    Timber.d("DEBUG", "Warning: Need notifications permission to be able to send APRS chat message notifications");
+                    Timber.tag("DEBUG").d("Warning: Need notifications permission to be able to send APRS chat message notifications");
                 }
                 return;
             }
@@ -1717,7 +1721,7 @@ public class MainActivity extends AppCompatActivity {
                     // Permission granted.
                 } else {
                     // Permission denied
-                    Timber.d("DEBUG", "Warning: Need fine location permission to include in APRS messages (user turned this setting on)");
+                    Timber.tag("DEBUG").d("Warning: Need fine location permission to include in APRS messages (user turned this setting on)");
                 }
                 return;
             }
@@ -1743,7 +1747,7 @@ public class MainActivity extends AppCompatActivity {
                 minBufferSize);
 
         if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
-            Timber.d("DEBUG", "Audio init error");
+            Timber.tag("DEBUG").d("Audio init error");
         }
     }
 
@@ -1855,6 +1859,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void showVersionSnackbar(int firmwareVer) {
         final Context ctx = this;
+        Timber.tag("DEBUG").d("show version %s", firmwareVer);
         CharSequence snackbarMsg = firmwareVer == -1 ? "No firmware installed" : "New firmware available";
         versionSnackbar = Snackbar.make(this, findViewById(R.id.mainTopLevelLayout), snackbarMsg, Snackbar.LENGTH_INDEFINITE)
                 .setBackgroundTint(Color.rgb(140, 20, 0)).setActionTextColor(Color.WHITE).setTextColor(Color.WHITE)
@@ -1877,7 +1882,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
-            Timber.d("DEBUG", "usbReceiver.onReceive()");
+            Timber.tag("DEBUG").d("usbReceiver.onReceive()");
 
             String action = intent.getAction();
             synchronized (this) {
@@ -1928,26 +1933,15 @@ public class MainActivity extends AppCompatActivity {
      * that's handled by RadioAudioService.setScanning().
      */
     private void setScanningUi(boolean scanning) {
-        AppCompatButton scanButton = findViewById(R.id.scanButton);
+        //AppCompatButton scanButton = findViewById(R.id.scanButton);
         if (!scanning) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    scanButton.setText("SCAN");
-                }
-            });
-
+            viewModel.setScanButtonText("SCAN");
             // If squelch was off before we started scanning, turn it off again
             if (squelch == 0) {
                 tuneToMemoryUi(activeMemoryId);
             }
         } else { // Start scanning
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    scanButton.setText("STOP SCAN");
-                }
-            });
+            viewModel.setScanButtonText("STOP SCAN");
         }
     }
 
@@ -2087,7 +2081,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             default:
-                Timber.d("DEBUG", "Warning: Returned to MainActivity from unexpected request code: " + requestCode);
+                Timber.tag("DEBUG").d("Warning: Returned to MainActivity from unexpected request code: " + requestCode);
         }
     }
 

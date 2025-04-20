@@ -44,6 +44,17 @@ public class MainViewModel extends ViewModel {
     // LiveData holding the list of APRSMessage objects
     private final MutableLiveData<List<APRSMessage>> aprsMessages = new MutableLiveData<>();
 
+    // Live data for scan button
+    private final MutableLiveData<String> scanButtonText = new MutableLiveData<>();
+
+    public LiveData<String> getScanButtonText() {
+        return scanButtonText;
+    }
+
+    public void setScanButtonText(String text) {
+        scanButtonText.setValue(text);
+    }
+
     private MainViewModelCallback callback;
 
     public static class MainViewModelCallback {

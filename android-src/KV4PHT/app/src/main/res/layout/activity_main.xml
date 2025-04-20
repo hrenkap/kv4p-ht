@@ -208,7 +208,7 @@
                         android:alpha="0.2"
                         android:focusable="false"/>
                 </LinearLayout>
-
+<!--
                 <androidx.appcompat.widget.LinearLayoutCompat
                     android:id="@+id/voiceModeLineHolder"
                     android:layout_width="match_parent"
@@ -260,8 +260,6 @@
                 android:paddingLeft="24dp"
                 android:paddingRight="24dp"
                 android:layout_weight="1">
-
-                <!-- Memory list goes here -->
 
             </androidx.recyclerview.widget.RecyclerView>
 
@@ -332,7 +330,7 @@
                 android:paddingBottom="12dp"
                 android:layout_marginLeft="24dp"
                 android:layout_marginRight="24dp"
-                android:layout_marginTop="16dp"> <!-- displayed when user taps the bottom nav -->
+                android:layout_marginTop="16dp">
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/aprsRecyclerView"
@@ -340,8 +338,6 @@
                     android:layout_height="match_parent"
                     android:orientation="vertical"
                     android:layout_weight="1">
-
-                    <!-- APRS messages go here -->
 
                 </androidx.recyclerview.widget.RecyclerView>
 
@@ -453,15 +449,14 @@
                     </androidx.appcompat.widget.LinearLayoutCompat>
 
                 </androidx.appcompat.widget.LinearLayoutCompat>
-
+-->
             </androidx.appcompat.widget.LinearLayoutCompat>
-
             <androidx.viewpager2.widget.ViewPager2
                 android:id="@+id/main_fragment_pager"
                 android:name="androidx.fragment.app.Fragment"
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
-        />
+                android:layout_height="wrap_content"
+            />
 
             <com.google.android.material.bottomnavigation.BottomNavigationView
                 android:id="@+id/bottomNavigationView"

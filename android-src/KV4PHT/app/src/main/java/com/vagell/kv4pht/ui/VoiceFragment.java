@@ -26,10 +26,11 @@ import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 
 import timber.log.Timber;
 
@@ -58,6 +59,13 @@ public class VoiceFragment extends Fragment {
         RecyclerView memoriesView = view.findViewById(R.id.memoriesList2);
         memoriesView.setLayoutManager(new LinearLayoutManager(getContext()));
         memoriesView.setAdapter(mainAct.getMemoriesAdapter());
+
+        AppCompatButton scanButton = view.findViewById(R.id.scanButton);
+
+        MainViewModel viewModel = new ViewModelProvider(mainAct).get(MainViewModel.class);
+        viewModel.getScanButtonText().observe(getViewLifecycleOwner(), text -> {
+            scanButton.setText(text);
+        });
 
     }
 }

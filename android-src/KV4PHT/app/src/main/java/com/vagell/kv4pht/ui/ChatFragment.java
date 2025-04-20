@@ -69,7 +69,7 @@ public class ChatFragment extends Fragment {
             sendButton.setEnabled(true);
             sendButtonOverlay.setVisibility(View.GONE);
         }
-
+    
         RecyclerView aprsRecyclerViewFragment = view.findViewById(R.id.aprsRecyclerView2);
         aprsRecyclerViewFragment.setLayoutManager(new LinearLayoutManager(getContext()));
         aprsRecyclerViewFragment.setAdapter(mainAct.getAprsAdapter());

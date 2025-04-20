@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package com.vagell.kv4pht.ui;
 
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,7 +35,7 @@ import com.vagell.kv4pht.logging.BufferedLogger;
 import com.vagell.kv4pht.ui.MainActivity;
 import com.vagell.kv4pht.R;
 
-public class LogFragment extends Fragment implements BufferedLogger.LogListener {
+public class LogFragment extends Fragment {
 
     private TextView textView;
 
@@ -51,16 +52,17 @@ public class LogFragment extends Fragment implements BufferedLogger.LogListener 
                               @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        BufferedLogger.getSingleton().addListener(this);
-
+        BufferedLogger log = BufferedLogger.getSingleton();
         textView = (TextView) view.findViewById(R.id.logTextView);
 
-        textView.setText("");
+        log.getAllLogs().observe(getViewLifecycleOwner(), logs -> {
+            textView.setText(TextUtils.join("\n", logs));
+        });
+        
+        //log.getNewLogLine().observe(getViewLifecycleOwner(), line -> {
+        //    textView.append(line + "\n");
+        //});
 
         Timber.d("Log fragment created");
-    }
-
-    public void onNewLog(String line) {
-        textView.setText(textView.getText()+line+"\n");
     }
 }
