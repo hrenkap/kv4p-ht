@@ -1,0 +1,34 @@
+name: Build PlatformIO ESP32
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: microcontroller-src
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install PlatformIO
+      run: pip install platformio
+
+    - name: Build default environment (esp32dev)
+      run: platformio run --environment esp32dev
+
+    - name: Build release environment (esp32dev-release)
+      run: platformio run --environment esp32dev-release
+
