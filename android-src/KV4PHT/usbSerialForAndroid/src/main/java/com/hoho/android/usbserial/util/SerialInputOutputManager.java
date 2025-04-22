@@ -13,6 +13,8 @@ import androidx.annotation.VisibleForTesting;
 
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 
+import timber.log.Timber;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -209,7 +211,7 @@ public class SerialInputOutputManager {
             synchronized (mWriteBufferLock) {
                 mWriteBufferLock.notifyAll(); // Wake up any waiting thread to check the stop condition
             }
-            Log.i(TAG, "Stop requested");
+            Timber.tag(TAG).i("Stop requested");
         }
     }
 
@@ -246,7 +248,7 @@ public class SerialInputOutputManager {
             }
             if (!mState.compareAndSet(SerialInputOutputManager.State.STARTING, SerialInputOutputManager.State.STARTING_STAGE2)) {
                 if (mState.compareAndSet(SerialInputOutputManager.State.STARTING_STAGE2, SerialInputOutputManager.State.RUNNING)) {
-                    Log.i(TAG, getName() + ": Started mState=" + mState.get());
+                    Timber.tag(TAG).i(getName() + ": Started mState=" + mState.get());
                 }
             }
             mStartuplatch.countDown();
@@ -255,7 +257,7 @@ public class SerialInputOutputManager {
         private void finalizeThread() {
             if (!mState.compareAndSet(SerialInputOutputManager.State.RUNNING, SerialInputOutputManager.State.STOPPING)) {
                 if (mState.compareAndSet(SerialInputOutputManager.State.STOPPING, SerialInputOutputManager.State.STOPPED)) {
-                    Log.i(TAG, getName() + ": Stopped mState=" + mState.get());
+                    Timber.tag(TAG).i(getName() + ": Stopped mState=" + mState.get());
                 }
             }
             mShutdownlatch.countDown();
@@ -272,7 +274,7 @@ public class SerialInputOutputManager {
                 do {
                     step();
                 } while (isStillRunning());
-                Log.i(TAG, getName() + ": Stopping mState=" + mState.get());
+                Timber.tag(TAG).i(getName() + ": Stopping mState=" + mState.get());
             } catch (Throwable e) {
                 if (Thread.currentThread().isInterrupted()) {
                     Log.w(TAG, "Thread interrupted, stopping " + getName());

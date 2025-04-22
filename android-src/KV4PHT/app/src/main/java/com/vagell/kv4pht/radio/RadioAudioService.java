@@ -888,6 +888,14 @@ public class RadioAudioService extends Service {
         return false;
     }
 
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X ", b));
+        }
+        return sb.toString().trim();
+    }
+    
     public void setupSerialConnection() {
         Timber.tag("DEBUG").d("setupSerialConnection()");
 
@@ -939,12 +947,12 @@ public class RadioAudioService extends Service {
 //        }
 
         serialPort = driver.getPorts().get(0); // Most devices have just one port (port 0)
-        Timber.tag("DEBUG").d("serialPort: " + serialPort);
+        Timber.tag("DEBUG").d("serialPort: %s, total ports %s", serialPort, driver.getPorts().size());
         try {
             serialPort.open(connection);
             serialPort.setParameters(115200, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
         } catch (Exception e) {
-            Timber.tag("DEBUG").d("Error: couldn't open USB serial port.");
+            Timber.tag("DEBUG").d("Error: couldn't open USB serial port %s.", serialPort);
             if (callbacks != null) {
                 callbacks.radioMissing();
             }
@@ -961,6 +969,7 @@ public class RadioAudioService extends Service {
         usbIoManager = new SerialInputOutputManager(serialPort, new SerialInputOutputManager.Listener() {
             @Override
             public void onNewData(byte[] data) {
+                Timber.tag("DEBUG").d("Got data on serial port %s: %s", serialPort, bytesToHex(data));
                 esp32DataStreamParser.processBytes(data);
             }
 
@@ -987,7 +996,17 @@ public class RadioAudioService extends Service {
         usbIoManager.setWriteBufferSize(90000); // Must be large enough that ESP32 can take its time accepting our bytes without overrun.
         usbIoManager.setReadBufferSize(1024); // Must not be 0 (infinite) or it may block on read() until a write() occurs.
         usbIoManager.setReadBufferCount(16 * 2);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ex) {
+            throw new RuntimeException(ex);
+        }
         usbIoManager.start();
+//        try {
+//            Thread.sleep(1000);
+//        } catch (InterruptedException ex) {
+//            throw new RuntimeException(ex);
+//        }
         hostToEsp32 = new Protocol.Sender(usbIoManager);
         checkedFirmwareVersion = false;
         gotHello = false;
@@ -1000,7 +1019,7 @@ public class RadioAudioService extends Service {
                 callbacks.missingFirmware();
                 setMode(MODE_BAD_FIRMWARE);
             }
-        }, 1000);
+        }, 10000);
     }
 
     /**

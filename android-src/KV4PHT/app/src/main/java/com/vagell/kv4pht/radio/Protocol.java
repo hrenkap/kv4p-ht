@@ -10,10 +10,10 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.hoho.android.usbserial.util.SerialInputOutputManager;
 
-import android.util.Log;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import timber.log.Timber;
 
 public final class Protocol {
     private static final String TAG = Protocol.class.getSimpleName();
@@ -241,6 +241,7 @@ public final class Protocol {
         }
 
         private void sendCommand(SndCommand commandType, byte[] param) {
+            Timber.tag("DEBUG").d("Sending USB command %s, bytes = %s", commandType, param);
             int frameSize = COMMAND_DELIMITER.length + 1 + 2 + (param != null ? param.length : 0);
             waitUntilCanSend(frameSize);
             ByteBuffer buffer = ByteBuffer.allocate(frameSize);
@@ -349,6 +350,9 @@ public final class Protocol {
         private void processByte(byte b) {
             if (matchedDelimiterTokens < COMMAND_DELIMITER.length) {
                 matchedDelimiterTokens = (b == COMMAND_DELIMITER[matchedDelimiterTokens]) ? matchedDelimiterTokens + 1 : 0;
+                if (matchedDelimiterTokens == 0) {
+                    Timber.tag(TAG).d("Ignoring unknown value %s", b);
+                }
             } else if (matchedDelimiterTokens == COMMAND_DELIMITER.length) {
                 command = b;
                 matchedDelimiterTokens++;
@@ -380,7 +384,7 @@ public final class Protocol {
             if (cmd != RcvCommand.COMMAND_RCV_UNKNOWN) {
                 onCommand.accept(cmd, commandParams, commandParamLen);
             } else {
-                Log.w(TAG, "Unknown cmd received from ESP32: 0x" + Integer.toHexString(this.command & 0xFF) + " paramLen=" + commandParamLen);
+                Timber.tag(TAG).w("Unknown cmd received from ESP32: 0x" + Integer.toHexString(this.command & 0xFF) + " paramLen=" + commandParamLen);
             }
         }
 

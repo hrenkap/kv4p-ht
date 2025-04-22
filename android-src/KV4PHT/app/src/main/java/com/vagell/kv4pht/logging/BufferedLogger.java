@@ -55,7 +55,8 @@ public class BufferedLogger extends Timber.Tree {
         if (currentLogs.size() > maxLines) {
             currentLogs.remove(0);
         }
-        allLogs.setValue(currentLogs);
-        newLogLine.setValue(logLine);
+        // must use post for logging from background threads
+        allLogs.postValue(currentLogs);
+        newLogLine.postValue(logLine);
     }   
 }
