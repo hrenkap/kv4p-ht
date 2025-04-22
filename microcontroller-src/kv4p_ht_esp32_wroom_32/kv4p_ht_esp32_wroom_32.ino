@@ -50,6 +50,12 @@ void setMode(Mode newMode) {
   }
   mode = newMode;
   switch (mode) {
+    case MODE_UNCONNECTED:
+      _LOGI("MODE_UNCONNECTED");
+      digitalWrite(PTT_PIN, HIGH);
+      endI2STx();
+      endI2SRx();
+      break;
     case MODE_STOPPED:
       _LOGI("MODE_STOPPED");
       digitalWrite(PTT_PIN, HIGH);
@@ -127,9 +133,8 @@ void setup() {
   debugSetup();
   // Begin in STOPPED mode
   squelched = (digitalRead(SQ_PIN) == HIGH);
-  setMode(MODE_STOPPED);
+  setMode(MODE_UNCONNECTED);
   ledSetup();
-  sendHello();
   _LOGI("Setup is finished");
 }
 
@@ -164,6 +169,9 @@ void doConfig(Config const &config) {
 }
 
 void handleCommands(RcvCommand command, uint8_t *params, size_t param_len) {
+  if (mode == MODE_UNCONNECTED) {
+    setMode(MODE_STOPPED);
+  }
   switch (command) {
     case COMMAND_HOST_CONFIG:
       if (param_len == sizeof(Config)) {
@@ -233,8 +241,24 @@ void rssiLoop() {
   }
 }
 
+unsigned long lastHelloTime = 0;
+const unsigned long helloInterval = 100;  // ms
+
+void connectLoop()
+{
+  if (mode == MODE_UNCONNECTED) {
+    unsigned long now = millis();
+
+    if (now - lastHelloTime >= helloInterval) {
+      sendHello();
+      lastHelloTime = now;
+    }
+  }
+}
+
 void loop() {
   squelched = squelchDebounce.debounce((digitalRead(SQ_PIN) == HIGH));
+  connectLoop();
   debugLoop();
   ledLoop();
   protocolLoop();

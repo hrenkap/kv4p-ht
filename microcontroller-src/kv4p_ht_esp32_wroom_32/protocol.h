@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <Arduino.h>
 #include "globals.h"
 #include "debug.h"
+#include <esp_task_wdt.h>
 
 // Delimeter must also match Android app
 const uint8_t COMMAND_DELIMITER[] = {0xDE, 0xAD, 0xBE, 0xEF};
@@ -177,6 +178,7 @@ public:
     while (_serial.available() > 0) {
       uint8_t b = _serial.read();
       processByte(b);
+      esp_task_wdt_reset();
     }
   }
 private:

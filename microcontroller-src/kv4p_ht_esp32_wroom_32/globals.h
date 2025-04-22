@@ -63,9 +63,10 @@ hw_ver_t hardware_version = HW_VER_V1;  // lowest common denominator
 enum Mode {
   MODE_TX,
   MODE_RX,
+  MODE_UNCONNECTED,
   MODE_STOPPED
 };
-Mode mode = MODE_STOPPED;
+Mode mode = MODE_UNCONNECTED;
 
 // Current SQ status
 bool squelched = false;
