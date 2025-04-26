@@ -55,13 +55,13 @@ public class LogFragment extends Fragment {
         BufferedLogger log = BufferedLogger.getSingleton();
         textView = (TextView) view.findViewById(R.id.logTextView);
 
-        log.getAllLogs().observe(getViewLifecycleOwner(), logs -> {
-            textView.setText(TextUtils.join("\n", logs));
-        });
-        
-        //log.getNewLogLine().observe(getViewLifecycleOwner(), line -> {
-        //    textView.append(line + "\n");
+        //log.getAllLogs().observe(getViewLifecycleOwner(), logs -> {
+        //    textView.setText(TextUtils.join("\n", logs));
         //});
+        
+        log.getNewLogLine().observe(getViewLifecycleOwner(), line -> {
+            textView.append(line + "\n");
+        });
 
         Timber.d("Log fragment created");
     }

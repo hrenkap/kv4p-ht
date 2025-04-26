@@ -969,7 +969,7 @@ public class RadioAudioService extends Service {
         usbIoManager = new SerialInputOutputManager(serialPort, new SerialInputOutputManager.Listener() {
             @Override
             public void onNewData(byte[] data) {
-                Timber.tag("DEBUG").d("Got data on serial port %s: %s", serialPort, bytesToHex(data));
+                //Timber.tag("DEBUG").d("Got data on serial port %s: %s", serialPort, bytesToHex(data));
                 esp32DataStreamParser.processBytes(data);
             }
 
@@ -1002,11 +1002,7 @@ public class RadioAudioService extends Service {
             throw new RuntimeException(ex);
         }
         usbIoManager.start();
-//        try {
-//            Thread.sleep(1000);
-//        } catch (InterruptedException ex) {
-//            throw new RuntimeException(ex);
-//        }
+
         hostToEsp32 = new Protocol.Sender(usbIoManager);
         checkedFirmwareVersion = false;
         gotHello = false;

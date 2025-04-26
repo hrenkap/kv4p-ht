@@ -211,7 +211,7 @@ public class SerialInputOutputManager {
             synchronized (mWriteBufferLock) {
                 mWriteBufferLock.notifyAll(); // Wake up any waiting thread to check the stop condition
             }
-            Timber.tag(TAG).i("Stop requested");
+            Timber.tag(TAG).i("Serial: Stop requested");
         }
     }
 
